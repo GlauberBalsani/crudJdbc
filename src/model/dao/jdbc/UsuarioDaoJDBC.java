@@ -47,11 +47,42 @@ public class UsuarioDaoJDBC implements UsuarioDao {
 
     @Override
     public void update(Usuario usuario) {
+        PreparedStatement stmt = null;
+        try {
+            stmt = connection.prepareStatement(
+                    "UPDATE usuarios "
+                            + "SET nome = ?, email = ?, senha = ? "
+                            + "WHERE id = ? ");
+
+            stmt.setString(1, usuario.getNome());
+            stmt.setString(2, usuario.getEmail());
+            stmt.setString(3, usuario.getSenha());
+            stmt.setInt(4,usuario.getId());
+            stmt.execute();
+        } catch (SQLException e) {
+            throw new DbException(e.getMessage());
+        } finally {
+            DB.closeStatement(stmt);
+        }
 
     }
 
     @Override
-    public void deleteById(Usuario usuario) {
+    public void deleteById(Integer id) {
+        PreparedStatement smt = null;
+        try {
+            smt = connection.prepareStatement("DELETE FROM usuarios WHERE id = ? ");
+
+            smt.setInt(1, id);
+
+            smt.executeQuery();
+
+        }
+        catch (SQLException e) {
+            throw  new DbException(e.getMessage());
+        } finally {
+            DB.closeStatement(smt);
+        }
 
     }
 
@@ -62,12 +93,12 @@ public class UsuarioDaoJDBC implements UsuarioDao {
         try {
             stmt = connection.prepareStatement(
                     "SELECT * FROM usuarios "
-                    + "WHERE id = ?");
+                            + "WHERE id = ?");
 
             stmt.setInt(1, id);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                Usuario usuario =  new Usuario();
+                Usuario usuario = new Usuario();
                 usuario.setId(rs.getInt("id"));
                 usuario.setNome(rs.getString("nome"));
                 usuario.setEmail(rs.getString("email"));
@@ -75,11 +106,9 @@ public class UsuarioDaoJDBC implements UsuarioDao {
                 return usuario;
             }
             return null;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             throw new DbException(e.getMessage());
-        }
-        finally {
+        } finally {
             DB.closeStatement(stmt);
             DB.closeResultSet(rs);
         }
